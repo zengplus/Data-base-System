@@ -35,24 +35,75 @@
 ## AI 辅助声明
 项目编写是基于 Trae IDE（类VS Code的ide）完成的编写代码活动，使用该IDE内置的Ai Auto自动模型提供AI辅助能力，相关辅助行为及对应代码补全在代码中的注释体现。
 
-## 项目结构（数据库核心视角）
+## 项目结构
 ```
 .
-├── db/
-│   ├── schema/
-│   │   ├── project_a.sql       # 输入型数据库Schema（读优化）
-│   │   ├── project_b.sql       # 输出型数据库Schema（写优化，未完善）
-│   │   └── final_system.sql    # 最终优化后的统一Schema
-│   ├── scripts/
-│   │   ├── csv_to_db.py        # 出租车原始数据入库
-│   │   ├── db_read_optim.py    # Project A 读性能测试脚本
-│   │   └── db_write_optim.py   # Project B 写性能测试脚本
-├── sumo/                       # 仿真辅助目录（验证数据库功能）
-│   ├── db_to_sumo.py           # 数据库→仿真（读验证）
-│   └── sumo_to_db.py           # 仿真→数据库（写验证）
 ├── data/                       # 原始数据目录
-│   └── 24hour_end_1.csv
-└── optimize/                   # 优化脚本目录
-    ├── db_sync.py              # 读写分离同步脚本
-    └── data_audit.py           # 数据校验与溯源脚本
+│   └── 24hour_end_1.csv        
+├── sumo_inputs/                # SUMO 仿真输入与配置文件
+│   ├── convert-1.net.xml       
+│   ├── routes.rou.xml          
+│   ├── sumo.sumocfg            
+│   └── ...                     
+├── docs/                       # 项目文档与学习记录
+│   └── study/                  # 数据库课程学习笔记
+├── csv_to_db.py                # [Project A] 将 CSV 原始数据导入 SQLite 数据库
+├── db_to_sumo.py               # [Project A] 读取数据库生成 SUMO 仿真路由文件
+├── db_to_sumo.sql              # [Project A] 相关的 SQL 建表语句
+├── sumo_to_db.py               # [Project B] 运行 SUMO 仿真并将轨迹数据存入数据库
+├── sumo_to_db.sql              # [Project B] 相关的 SQL 建表语句
+├── requirements.txt            # Python 依赖列表
+└── README.md                   # 项目说明文档
 ```
+
+---
+
+## 环境复现指南 (Environment Reproduction)
+
+
+### 1. 操作系统要求
+*   **推荐系统**：Ubuntu 20.04 LTS 或 Ubuntu 22.04 LTS。
+*   **说明**：SUMO 仿真软件在 Linux 环境下运行最为稳定，且安装最为便捷。
+
+### 2. 安装 SUMO 仿真软件
+在 Ubuntu 终端中执行以下命令安装 SUMO 及其工具：
+
+```bash
+sudo add-apt-repository ppa:sumo/stable
+sudo apt-get update
+sudo apt-get install sumo sumo-tools sumo-doc
+```
+
+### 3. Python 环境与依赖管理
+
+本项目推荐使用 `uv` 进行依赖管理，因为它速度极快且生成的 `uv.lock` 文件能确保依赖版本的严格一致。
+
+#### 方式一：使用 uv
+
+
+1.  **安装 uv**:
+    ```bash
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    source $HOME/.local/bin/env  # 使命令生效
+    ```
+
+2.  **创建虚拟环境并安装依赖**:
+    ```bash
+    # 在项目根目录下执行
+    uv venv 
+    source .venv/bin/activate
+    uv pip sync uv.lock
+    ```
+
+#### 方式二：使用标准 pip
+
+如果你不想安装额外的工具，也可以使用标准的 `pip`：
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. 依赖列表 (requirements.txt)
+项目根目录下已创建 `requirements.txt`，主要包含：
+*   `traci`: SUMO 的 Python 接口库
+*   `sumolib`: SUMO 的网络与工具库
