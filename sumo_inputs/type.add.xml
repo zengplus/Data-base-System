@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<additional>
+    <!-- 
+      vType 定义额外的车辆类型属性：
+      - id: 车辆类型ID。
+      - vClass: 车辆类别。
+      - personCapacity: 乘客容量（例如 4 人）。
+      
+      param 定义自定义参数：
+      - has.taxi.device: 是否配备出租车设备。
+      - has.rerouting.device: 是否配备重路由设备（动态路径规划）。
+    -->
+    <vType id="taxi" vClass="taxi" personCapacity="4">
+        <param key="has.taxi.device" value="true"/>
+        <param key="has.rerouting.device" value="true"/>
+    </vType>
+</additional>

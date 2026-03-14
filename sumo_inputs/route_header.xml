@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes>
+  <!-- 
+    vType 定义车辆类型（头部模板）：
+    - id: 车辆类型ID。
+    - length: 车长（8.0米）。
+    - width: 车宽（2.2米）。
+    注意：这里的尺寸定义可能被后续具体路线文件中的定义覆盖或补充。
+  -->
+  <vType id="taxi" vClass="passenger" length="8.0" width="2.2"/>

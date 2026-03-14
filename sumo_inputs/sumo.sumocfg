@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <!-- 
+    input 部分定义模拟所需的输入文件：
+    - net-file: 道路网络文件（通常由 netconvert 生成）。
+    - route-files: 车辆路线文件，包含车辆类型、路线和具体车辆定义。
+  -->
+  <input>
+    <net-file value="convert-1.net.xml"/>
+    <route-files value="routes.rou.xml"/>
+  </input>
+  <!-- 
+    time 部分定义模拟的时间范围：
+    - begin: 模拟开始时间（秒）。
+    - end: 模拟结束时间（秒）。
+  -->
+  <time>
+    <begin value="0"/>
+    <end value="1000000000"/>
+  </time>
+</configuration>

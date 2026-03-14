@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <!-- 
+    input 部分定义模拟所需的输入文件：
+    - net-file: 道路网络文件。
+    - route-files: 车辆路线文件。
+  -->
+  <input>
+    <net-file value="convert-1.net.xml"/>
+    <route-files value="routes.rou.xml"/>
+  </input>
+  <!-- 
+    time 部分定义模拟的时间范围：
+    - begin: 开始时间。
+    - end: 结束时间。
+  -->
+  <time>
+    <begin value="0"/>
+    <end value="1000000000"/>
+  </time>
+</configuration>

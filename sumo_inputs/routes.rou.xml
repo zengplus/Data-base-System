@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes>
+  <!-- 
+    vType (Vehicle Type) 定义车辆类型属性：
+    - id: 车辆类型的唯一标识符，用于在 vehicle 标签中引用。
+    - vClass: 车辆类别（如 passenger, bus, truck 等）。
+    - length: 车辆长度（米）。修改此值可改变车长。
+    - width: 车辆宽度（米）。修改此值可改变车宽。
+    - color: 车辆颜色（可选，如 "1,0,0" 表示红色）。
+    - maxSpeed: 最大速度（米/秒，可选）。
+  -->
+  <vType id="taxi" vClass="passenger" length="4.0" width="1.6"/>
+  
+  <!-- 
+    route 定义车辆行驶路线：
+    - id: 路线的唯一标识符。
+    - edges: 路线包含的边（道路段）ID列表，空格分隔。
+  -->
+  <route id="r0" edges="-10357 -11011 10360 83 84 6516 6517 16233 1318 16494 6047 19378 6045 6042 1951 18220 5360 1657 1423 6438 5878 15281 1505 15284 6583 5830 5828 29234 6366 2095 4659 6797 11718 11730 11715 11694 16080 5402 10967 5405 16102 1860 5407 16103 4016 5408 5411 9937"/>
+  
+  <!-- 
+    vehicle 定义具体的车辆实例：
+    - id: 车辆的唯一标识符。
+    - type: 引用的车辆类型ID（对应 vType 的 id）。
+    - route: 引用的路线ID（对应 route 的 id）。
+    - depart: 出发时间（秒）。
+    - departLane: 出发车道（best 表示自动选择最佳车道）。
+    - departSpeed: 出发速度（max 表示最大允许速度）。
+  -->
+  <vehicle id="veh_0" type="taxi" route="r0" depart="0" departLane="best" departSpeed="max"/>
+  <vehicle id="veh_1" type="taxi" route="r0" depart="2" departLane="best" departSpeed="max"/>
+  <vehicle id="veh_2" type="taxi" route="r0" depart="4" departLane="best" departSpeed="max"/>
+  <vehicle id="veh_3" type="taxi" route="r0" depart="6" departLane="best" departSpeed="max"/>
+  <vehicle id="veh_4" type="taxi" route="r0" depart="8" departLane="best" departSpeed="max"/>
+  <vehicle id="veh_5" type="taxi" route="r0" depart="10" departLane="best" departSpeed="max"/>
+  <vehicle id="veh_6" type="taxi" route="r0" depart="12" departLane="best" departSpeed="max"/>
+  <vehicle id="veh_7" type="taxi" route="r0" depart="14" departLane="best" departSpeed="max"/>
+  <vehicle id="veh_8" type="taxi" route="r0" depart="16" departLane="best" departSpeed="max"/>
+  <vehicle id="veh_9" type="taxi" route="r0" depart="18" departLane="best" departSpeed="max"/>
+  <vehicle id="veh_10" type="taxi" route="r0" depart="20" departLane="best" departSpeed="max"/>
+  <vehicle id="veh_11" type="taxi" route="r0" depart="22" departLane="best" departSpeed="max"/>
+  <vehicle id="veh_12" type="taxi" route="r0" depart="24" departLane="best" departSpeed="max"/>
+  <vehicle id="veh_13" type="taxi" route="r0" depart="26" departLane="best" departSpeed="max"/>
+  <vehicle id="veh_14" type="taxi" route="r0" depart="28" departLane="best" departSpeed="max"/>
+  <vehicle id="veh_15" type="taxi" route="r0" depart="30" departLane="best" departSpeed="max"/>
+  <vehicle id="veh_16" type="taxi" route="r0" depart="32" departLane="best" departSpeed="max"/>
+  <vehicle id="veh_17" type="taxi" route="r0" depart="34" departLane="best" departSpeed="max"/>
+  <vehicle id="veh_18" type="taxi" route="r0" depart="36" departLane="best" departSpeed="max"/>
+  <vehicle id="veh_19" type="taxi" route="r0" depart="38" departLane="best" departSpeed="max"/>
+  <vehicle id="veh_20" type="taxi" route="r0" depart="40" departLane="best" departSpeed="max"/>
+  <vehicle id="veh_21" type="taxi" route="r0" depart="42" departLane="best" departSpeed="max"/>
+  <vehicle id="veh_22" type="taxi" route="r0" depart="44" departLane="best" departSpeed="max"/>
+  <vehicle id="veh_23" type="taxi" route="r0" depart="46" departLane="best" departSpeed="max"/>
+  <vehicle id="veh_24" type="taxi" route="r0" depart="48" departLane="best" departSpeed="max"/>
+  <vehicle id="veh_25" type="taxi" route="r0" depart="50" departLane="best" departSpeed="max"/>
+  <vehicle id="veh_26" type="taxi" route="r0" depart="52" departLane="best" departSpeed="max"/>
+  <vehicle id="veh_27" type="taxi" route="r0" depart="54" departLane="best" departSpeed="max"/>
+  <vehicle id="veh_28" type="taxi" route="r0" depart="56" departLane="best" departSpeed="max"/>
+  <vehicle id="veh_29" type="taxi" route="r0" depart="58" departLane="best" departSpeed="max"/>
+</routes>
