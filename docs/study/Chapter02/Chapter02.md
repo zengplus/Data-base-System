@@ -1,4 +1,4 @@
-# 关系数据库SQL实操语句（含完整执行结果+讲义精准匹配）
+# 关系数据库SQL实操语句
 以下SQL语句完全对应PDF讲义的章节、页码和示例，覆盖**表定义、基础查询、高级查询、数据库修改**全核心知识点，同时提供Python+SQLite3的串联执行代码，所有示例基于讲义中的`instructor`/`student`/`course`/`takes`/`section`/`teaches`核心表，**每段代码均附带SQLite3实操输出结果**，与终端执行效果完全一致。
 
 ## 说明
@@ -25,11 +25,11 @@ Enter ".help" for usage hints.
 sqlite>
 ```
 
-### 1. 查看数据库中所有表（P40，SQLite3专属指令）
+### 1. 查看数据库中所有表（P40）
 ```sql
 sqlite> .tables
 ```
-**执行输出**：列出数据库中所有核心表（与讲义P41-P44定义完全一致）
+**执行输出**：列出数据库中所有核心表（P41-P44）
 ```
 advisor     course      department  instructor  prereq      section     student     takes       teaches     time_slot
 ```
