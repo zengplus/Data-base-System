@@ -9,7 +9,7 @@ class DBManager:
 
     def init_tables(self):
         """根据 SQL_FILE 创建表（需先定义好所有表结构）"""
-        with open(config.SQL_FILE, 'r') as f:
+        with open(config.SQL_FILE, "r", encoding="utf-8") as f:
             self.cursor.executescript(f.read())
         self.conn.commit()
 
