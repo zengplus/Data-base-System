@@ -17,7 +17,7 @@
     <ignore-route-errors value="true"/>
     <ignore-junction-blocker value="1"/>
     <routing-algorithm value="astar"/>
-    <scale value="0.5"/>
+    <scale value="1.0"/>
   </processing>
   <report>
     <log value="sumo_error.log"/>

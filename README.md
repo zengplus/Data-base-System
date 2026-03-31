@@ -14,55 +14,56 @@
 
 ## 系统架构与核心模块
 
-本项目严格按照 `项目要求.md` 中的目标进行设计，将系统划分为以下 5 大核心模块（对应要求中的 Detailed Tasks）以及 1 个主循环引擎模块。
+为严格满足本项目在时空数据管理和自主出租车调度上的目标，系统架构设计参考了经典的 `taxi-sim` 仿真模型思路（如供需计算与网格化路网调度），并严格按照五大核心任务划分为以下模块，外加驱动整个仿真的主循环引擎：
 
-### 0. 主循环引擎模块 (Main Engine)
-- **文件映射**: `main.py`, `config.py`
-- **功能描述**: 
-  - 驱动整个 SUMO 仿真步进（Step）。
-  - 监听所有车辆（2000辆背景车、300辆出租车），在其快到达终点时**提前无缝续接路线**，确保车辆无限循环行驶，不会消失。
-  - 在每个时间步统筹调用底层的订单生成、调度、状态更新和重平衡模块。
+### 0. 主循环引擎 (Main Simulation Engine)
+- **模块位置**: `main.py`
+- **功能职责**: 
+  - 驱动 SUMO 仿真步进（Step by Step）。
+  - 监听车辆到达事件，实现所有车辆（背景车与出租车）的**无限循环行驶**（在到达终点前动态规划新路线），确保规模稳定的交通流。
+  - 作为调度器的宿主，周期性触发订单生成、派单尝试和全局重平衡。
 
-### 1. 空间索引设计模块 (Index Design)
-- **文件映射**: `database/rtree_index.py`
-- **要求对应**: *Implement an R-Tree index in SQLite to store moving taxi coordinates (x, y) updated via TraCI.*
-- **功能描述**: 
-  - 实现了基于 R-Tree 的空间索引。
-  - 每一帧通过 TraCI 获取所有出租车的最新 (x,y) 坐标，并将其更新到数据库和 R-Tree 内存树中，极大地提升了后续空间查询的速度。
+### 1. 空间索引设计 (Index Design)
+- **模块位置**: `database/db_manager.py` (包含 R-Tree 与 SQLite 集成)
+- **功能职责**: 
+  - 核心要求：在 SQLite 中利用 R-Tree（或基于网格的替代方案）建立空间索引，存储并快速检索出租车的移动坐标 (x, y)。
+  - 在每个 TraCI 仿真步，实时更新 300 辆出租车的最新物理位置。
+  - 为下游的调度系统提供极速的空间范围查询支持。
 
-### 2. 订单生成与处理模块 (Request Handling)
-- **文件映射**: `dispatch/request_generator.py`
-- **要求对应**: *Generate stochastic passenger trip requests; use a K-Nearest Neighbor (KNN) query to find the closest idle taxis.*
-- **功能描述**: 
-  - 采用泊松分布等随机策略，在仿真的 3600 秒内生成总计约 1500 个乘客出行订单（Trip Requests）。
-  - 在接单阶段，利用第 1 模块构建的 R-Tree 索引执行 **KNN (K=20) 查询**，快速筛选出距离乘客最近的空闲出租车候选池。
+### 2. 订单请求处理 (Request Handling)
+- **模块位置**: `main.py` (随机请求生成) & `database/db_manager.py` (KNN 查询)
+- **功能职责**: 
+  - 随机生成 1,500 个分布在 3km × 3km 城市网格中的乘客出行请求（Trip Requests）。
+  - 利用数据库的空间索引执行 **K-Nearest Neighbor (KNN) 查询**，快速定位离乘客出发点最近的空闲出租车（Idle Taxis）集合。
 
-### 3. 智能派单与路由模块 (Dispatch Logic)
-- **文件映射**: `dispatch/scheduler.py`, `simulation/route_planner.py`
-- **要求对应**: *Write a Python controller that assigns the taxi in the DB and uses TraCI’s setRoute to navigate to the passenger.*
-- **功能描述**: 
-  - **Python 控制器**：负责将候选池中的车辆进行连通性验证（排除死胡同或单行道阻碍）。
-  - **数据库分配**：选定最优车辆后，在数据库中写入分配记录（Assignment）。
-  - **SUMO 导航**：通过 TraCI 的 `setRoute` 接口，为接单出租车规划一条前往乘客上车点的最短可达路径。
+### 3. 核心派单逻辑 (Dispatch Logic)
+- **模块位置**: `dispatch/scheduler.py` & `simulation/route_planner.py`
+- **功能职责**: 
+  - 结合 KNN 查询结果与真实路网连通性，将订单分配给最优的出租车。
+  - 使用 Python 控制器调用 TraCI 的 `setRoute` 接口，规划并下发导航路线，指挥出租车穿越背景车流前往接驾点。
+  - 确保车辆在复杂的城市路网（>500 条边）中成功抵达目的地。
 
-### 4. 车辆可用性与状态管理模块 (Availability Management)
-- **文件映射**: `database/db_manager.py`, `dispatch/scheduler.py`
-- **要求对应**: *Use atomic transactions to update taxi status from IDLE to PICKUP to OCCUPIED.*
-- **功能描述**: 
-  - **原子事务**：使用 SQLite 事务机制，确保车辆状态与订单状态的更新是原子的，防止“一车多派”或数据不一致。
-  - **状态流转机制**：
-    - `IDLE` (绿色)：空闲巡游状态。
-    - `PICKUP` (橙色)：接单后前往上车点的状态。
-    - `OCCUPIED` (红色)：接到乘客，前往目的地的载客状态。
-  - 状态变化时，不仅更新数据库，同时调用 TraCI 同步改变 SUMO GUI 中的车辆颜色。
+### 4. 状态与可用性管理 (Availability Management)
+- **模块位置**: `database/db_manager.py` (事务控制) & `dispatch/scheduler.py` (状态流转)
+- **功能职责**: 
+  - 使用数据库的**原子事务（Atomic Transactions）**严格管理出租车的生命周期状态。
+  - 实现标准的状态流转与 GUI 颜色可视化联动：
+    - `IDLE` (空闲/绿色) → `PICKUP` (接驾中/橙色) → `OCCUPIED` (载客中/红色) → `IDLE`。
+  - 确保高并发派单时不会出现同一辆车被分配多次的数据一致性问题。
 
-### 5. 空车重平衡模块 (Rebalancing)
-- **文件映射**: `rebalance/rebalancer.py`
-- **要求对应**: *Periodically query the DB for areas with high request density but low taxi supply and "rebalance" empty taxis to those zones.*
-- **功能描述**: 
-  - 周期性（如每 60 秒）执行全局扫描。
-  - 查询数据库中“未接单（PENDING）请求密集”但“周边缺乏 IDLE 车辆”的供需失衡区域（热点区）。
-  - 提取远离热点区的空闲车辆，强制下发重平衡指令，调度它们驶向需求高地，从而降低全局的乘客平均等待时间（AWT）和空载率。
+### 5. 空车重平衡调度 (Rebalancing)
+- **模块位置**: `rebalance/rebalancer.py`
+- **功能职责**: 
+  - 周期性（如每 5 分钟）分析系统供需关系。
+  - 借鉴 `taxi-sim` 的网格化评估思路，查询数据库中“订单请求密度高但空闲车辆供给低”的热点区域。
+  - 主动将长时间闲置的空闲出租车调度至这些高需求区域，从而有效降低乘客的平均等待时间（AWT）并优化空驶率。
+
+### 6. 指标评估模块 (Performance Evaluation)
+- **模块位置**: `evaluate_metrics.py`
+- **功能职责**: 
+  - 在仿真结束后，通过查询 `dispatch.db` 输出核心 KPI。
+  - 计算平均乘客等待时间（Average Wait Time, AWT）、行程时间、订单完成率。
+  - 后续可用于分析空间索引深度、车队密度与派单成功率的关联。
 
 ---
 

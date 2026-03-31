@@ -1,2 +1,6 @@
 traci
 sumolib
+pandas
+matplotlib
+geopandas
+shapely

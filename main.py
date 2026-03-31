@@ -49,66 +49,89 @@ def main():
             print(f"SUMO 仿真在 step {step} 遇到连接断开或异常: {e}")
             break
 
-        # 核心：提前续接路线，防止任何车辆（出租车/背景车）到达终点被 SUMO 自动删除
+        # 核心：提前续接路线，防止空闲车辆到达终点被 SUMO 自动删除
         import traci
         import random
         try:
             all_vehicles = traci.vehicle.getIDList()
             for vid in all_vehicles:
                 if vid.startswith("bg_") or vid.startswith("taxi_"):
-                    # 获取当前路线和当前所处的边索引
-                    route = traci.vehicle.getRoute(vid)
-                    route_index = traci.vehicle.getRouteIndex(vid)
-                    # 如果车辆快要到达路线终点（离最后一条边只差 1 或 0 条边）
-                    if route_index >= len(route) - 2:
-                        current_edge = traci.vehicle.getRoadID(vid)
-                        if not current_edge.startswith(":"): # 不在交叉口内部
-                            end_edge = random.choice(edge_ids)
-                            # 使用路由规划器续接一段新路
-                            new_path = route_planner.get_shortest_path(current_edge, end_edge)
-                            if len(new_path) > 1:
-                                traci.vehicle.setRoute(vid, new_path)
-        except Exception:
-            pass
-
-        # 备用方案：处理意外到达或一开始就被移除的车辆
-        try:
-            arrived_vehicles = traci.simulation.getArrivedIDList()
-            for vid in arrived_vehicles:
-                if vid.startswith("bg_") or vid.startswith("taxi_"):
-                    # 如果车辆到达终点，我们将其重新加入到仿真中，实现无限行驶
-                    try:
-                        # 如果车辆之前被派单了但由于某些原因消失了，这里要释放它的订单
+                    # 检查是否是空闲状态
+                    is_idle = True
+                    if vid.startswith("taxi_"):
                         db.cursor.execute("SELECT status FROM taxis WHERE taxi_id=?", (vid,))
                         row = db.cursor.fetchone()
                         if row and row[0] != 'IDLE':
-                            # 把车辆置为空闲
-                            db.cursor.execute("UPDATE taxis SET status='IDLE' WHERE taxi_id=?", (vid,))
-                            db.commit()
-                            if hasattr(scheduler, 'active_assignments') and vid in scheduler.active_assignments:
-                                req_id = scheduler.active_assignments[vid]
-                                # 如果订单没完成，就把它置回 PENDING
-                                db.cursor.execute("UPDATE trip_requests SET status='PENDING' WHERE request_id=? AND status != 'COMPLETED'", (req_id,))
-                                db.commit()
-                                del scheduler.active_assignments[vid]
+                            is_idle = False
 
-                        start_edge = random.choice(edge_ids)
-                        end_edge = random.choice(edge_ids)
-                        # 确保起点和终点连通，使用路由规划器获取合法路线
-                        route = route_planner.get_shortest_path(start_edge, end_edge)
-                        if len(route) < 2:
-                            # 如果没有路径，退回到简单的同边路线
-                            route = [start_edge]
-                            
-                        route_id = f"route_{vid}_{step}"
-                        traci.route.add(route_id, route)
-                        vtype = "taxi" if vid.startswith("taxi_") else "bg"
-                        traci.vehicle.add(vid, routeID=route_id, typeID=vtype)
-                        # 恢复出租车颜色，如果是刚重生的车
-                        if vid.startswith("taxi_"):
+                    if is_idle:
+                        route = traci.vehicle.getRoute(vid)
+                        route_index = traci.vehicle.getRouteIndex(vid)
+                        # 如果空闲车辆快要到达路线终点，给它续一段随机路，防止被删除
+                        if route_index >= len(route) - 2:
+                            current_edge = traci.vehicle.getRoadID(vid)
+                            if not current_edge.startswith(":"): # 不在交叉口内部
+                                end_edge = random.choice(edge_ids)
+                                new_path = route_planner.get_shortest_path(current_edge, end_edge)
+                                if len(new_path) > 1:
+                                    traci.vehicle.setRoute(vid, new_path)
+        except Exception:
+            pass
+
+        # 备用方案：处理意外到达或因碰撞被移除的车辆（保证全场300辆出租车和背景车不减少）
+        try:
+            active_vehicles = set(traci.vehicle.getIDList())
+            
+            # 1. 恢复掉线的出租车
+            db.cursor.execute("SELECT taxi_id, status FROM taxis")
+            all_taxis = db.cursor.fetchall()
+            
+            for vid, status in all_taxis:
+                if vid not in active_vehicles:
+                    # 这辆车掉线了（可能到达终点，也可能因碰撞被 remove）
+                    # 1. 如果它带着订单掉线，释放订单
+                    if status != 'IDLE':
+                        db.cursor.execute("UPDATE taxis SET status='IDLE' WHERE taxi_id=?", (vid,))
+                        if hasattr(scheduler, 'active_assignments') and vid in scheduler.active_assignments:
+                            req_id = scheduler.active_assignments[vid]
+                            db.cursor.execute("UPDATE trip_requests SET status='PENDING' WHERE request_id=? AND status != 'COMPLETED'", (req_id,))
+                            del scheduler.active_assignments[vid]
+                        db.commit()
+
+                    # 2. 重新将其加入仿真
+                    try:
+                        # 确保车辆真不在仿真中
+                        if vid not in traci.vehicle.getIDList():
+                            start_edge = random.choice(edge_ids)
+                            end_edge = random.choice(edge_ids)
+                            route = route_planner.get_shortest_path(start_edge, end_edge)
+                            if len(route) < 2:
+                                route = [start_edge]
+                                
+                            route_id = f"route_{vid}_{step}"
+                            traci.route.add(route_id, route)
+                            traci.vehicle.add(vid, routeID=route_id, typeID="taxi")
                             traci.vehicle.setColor(vid, (0, 255, 0, 255))
                             seen_taxis.discard(vid) # 允许重新初始化
-                    except Exception as e:
+                    except Exception:
+                        pass
+            
+            # 2. 恢复掉线的背景车
+            arrived_vehicles = traci.simulation.getArrivedIDList()
+            for vid in arrived_vehicles:
+                if vid.startswith("bg_"):
+                    try:
+                        if vid not in traci.vehicle.getIDList():
+                            start_edge = random.choice(edge_ids)
+                            end_edge = random.choice(edge_ids)
+                            route = route_planner.get_shortest_path(start_edge, end_edge)
+                            if len(route) < 2:
+                                route = [start_edge]
+                                
+                            route_id = f"route_{vid}_{step}"
+                            traci.route.add(route_id, route)
+                            traci.vehicle.add(vid, routeID=route_id, typeID="bg")
+                    except Exception:
                         pass
         except Exception:
             pass

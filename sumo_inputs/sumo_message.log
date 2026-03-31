@@ -1,0 +1,23 @@
+***Starting server on port 42785 ***
+Loading net-file from '/home/shu/Documents/Data-base-System/sumo_inputs/convert-1.net.xml' ... done (272ms).
+Loading done.
+Simulation started with time: 0.00.
+Simulation ended at time: 3600.00
+Reason: TraCI requested termination.
+Performance: 
+ Duration: 1764.99s
+ TraCI-Duration: 1471.29s
+ Real time factor: 2.03967
+ UPS: 4118.976743
+ UPS-Persons: 221.593639
+Vehicles: 
+ Inserted: 3438 (Loaded: 3442)
+ Running: 2296
+ Waiting: 4
+ Teleports: 0 (Collisions: 7)
+ Emergency Stops: 11
+ Emergency Braking: 16
+Persons: 
+ Inserted: 1500
+ Running: 125
+

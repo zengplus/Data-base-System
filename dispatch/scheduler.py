@@ -14,9 +14,58 @@ class Scheduler:
         self.route_planner = route_planner
         self.active_assignments = {}   # taxi_id -> request_id (用于状态追踪)
         self.visible_persons = set()   # 记录已经在 GUI 中显示的 person
+        self.order_timeout_steps = 600 # 订单等待超时时间（10分钟）
 
     def process_pending_requests(self, current_step):
-        """处理当前时间步所有待处理的请求"""
+        """处理当前时间步所有待处理的请求，并清理超时死单"""
+        # 1. 首先清理超时的 PENDING 和接驾超时(ASSIGNED) 的死单
+        self.db.begin_transaction()
+        try:
+            # 找到要取消的 PENDING 请求ID
+            self.db.cursor.execute(
+                "SELECT request_id FROM trip_requests WHERE status='PENDING' AND dispatch_time < ?",
+                (current_step - self.order_timeout_steps,)
+            )
+            cancelled_reqs = self.db.cursor.fetchall()
+            
+            self.db.cursor.execute(
+                "UPDATE trip_requests SET status='CANCELLED' WHERE status='PENDING' AND dispatch_time < ?",
+                (current_step - self.order_timeout_steps,)
+            )
+
+            # 找到接驾超时的 ASSIGNED 请求（说明车卡死在路上永远过不来）
+            self.db.cursor.execute(
+                """SELECT r.request_id, a.taxi_id FROM trip_requests r 
+                   JOIN assignments a ON r.request_id = a.request_id 
+                   WHERE r.status='ASSIGNED' AND a.assign_time < ?""",
+                (current_step - self.order_timeout_steps,)
+            )
+            stuck_reqs = self.db.cursor.fetchall()
+
+            for req_id, taxi_id in stuck_reqs:
+                cancelled_reqs.append((req_id,))
+                # 释放这辆卡死的车
+                self.db.cursor.execute("UPDATE taxis SET status='IDLE' WHERE taxi_id=?", (taxi_id,))
+                self.db.cursor.execute("UPDATE trip_requests SET status='CANCELLED' WHERE request_id=?", (req_id,))
+                # 移除活跃记录
+                if taxi_id in self.active_assignments:
+                    del self.active_assignments[taxi_id]
+
+            self.db.commit()
+            
+            # 在 GUI 中移除这些超时等不到车的乘客
+            import traci
+            for (req_id,) in cancelled_reqs:
+                person_id = f"person_{req_id}"
+                try:
+                    if person_id in traci.person.getIDList():
+                        traci.person.remove(person_id)
+                except Exception:
+                    pass
+        except:
+            self.db.rollback()
+
+        # 2. 处理仍在有效期内的请求
         self.db.cursor.execute(
             "SELECT request_id, origin_x, origin_y, origin_edge, dest_edge FROM trip_requests WHERE status='PENDING' AND dispatch_time <= ?",
             (current_step,)
@@ -30,25 +79,47 @@ class Scheduler:
                 generate_person_in_sumo(traci, req_id, origin_edge, dest_edge, current_step)
                 self.visible_persons.add(req_id)
             # 找到最近的空闲出租车（KNN）
-            # 我们请求更多的候选者，以防最近的车辆在内部边上或者无法到达
-            idle_taxis = self.rtree.knn(ox, oy, current_step, k=20)
+            # 缩减候选池，防止匹配到全城另一头的车
+            idle_taxis = self.rtree.knn(ox, oy, current_step, k=15) 
             if not idle_taxis:
                 continue
 
             best_taxi_id = None
             best_route = None
+            
+            # 首先，尝试寻找直接就在同一条边上的车（Pickup Time = 0）
             for taxi_id, _, _ in idle_taxis:
                 try:
                     if not self.sumo.is_on_internal_edge(taxi_id):
-                        # 验证是否真的有路径可以到达
                         current_edge = self.sumo.get_vehicle_edge(taxi_id)
-                        route = self.route_planner.get_shortest_path(current_edge, origin_edge)
-                        if len(route) >= 1 and (len(route) > 1 or current_edge == origin_edge):
+                        if current_edge == origin_edge:
                             best_taxi_id = taxi_id
-                            best_route = route
+                            best_route = [current_edge]
                             break
                 except Exception:
                     continue
+                    
+            # 如果同一条边上没有，再尝试寻找附近可以连通的车，以路径长度（接客时间）最短为准
+            if not best_taxi_id:
+                min_route_len = float('inf')
+                for taxi_id, tx, ty in idle_taxis:
+                    # 加入绝对的接驾物理直线距离限制：超过 1500 米（平方 2250000）的坚决不派！
+                    dist_sq = (tx - ox)**2 + (ty - oy)**2
+                    if dist_sq > 2250000:
+                        continue
+
+                    try:
+                        if not self.sumo.is_on_internal_edge(taxi_id):
+                            current_edge = self.sumo.get_vehicle_edge(taxi_id)
+                            route = self.route_planner.get_shortest_path(current_edge, origin_edge)
+                            
+                            # 加入绝对的接驾导航距离限制：如果绕路超过 30 条边，坚决不派！
+                            if len(route) >= 1 and len(route) < 30 and len(route) < min_route_len:
+                                min_route_len = len(route)
+                                best_taxi_id = taxi_id
+                                best_route = route
+                    except Exception:
+                        continue
             
             if not best_taxi_id:
                 continue
@@ -101,7 +172,9 @@ class Scheduler:
             # 在 GUI 中移除该 person，表示他上车了
             try:
                 import traci
-                traci.person.remove(f"person_{req_id}")
+                person_id = f"person_{req_id}"
+                if person_id in traci.person.getIDList():
+                    traci.person.remove(person_id)
             except:
                 pass
 
