@@ -3,9 +3,27 @@
   <input>
     <net-file value="convert-1.net.xml"/>
     <route-files value="routes.rou.xml"/>
+    <gui-settings-file value="gui-settings.xml"/>
   </input>
   <time>
     <begin value="0"/>
-    <end value="1000000000"/>
+    <end value="3600"/>
+    <step-length value="1.0"/>
   </time>
+  <processing>
+    <collision.action value="remove"/>
+    <collision.mingap-factor value="0"/>
+    <time-to-teleport value="-1"/>
+    <ignore-route-errors value="true"/>
+    <ignore-junction-blocker value="1"/>
+    <routing-algorithm value="astar"/>
+    <scale value="0.5"/>
+  </processing>
+  <report>
+    <log value="sumo_error.log"/>
+    <message-log value="sumo_message.log"/>
+    <error-log value="sumo_error_only.log"/>
+    <no-step-log value="true"/>
+    <no-warnings value="true"/>
+  </report>
 </configuration>

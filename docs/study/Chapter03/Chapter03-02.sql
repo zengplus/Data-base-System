@@ -142,5 +142,6 @@ left join teaches on instructor.ID = teaches.ID
 where teaches.ID is null;
 
 
-
+-- 
+-- 
 
