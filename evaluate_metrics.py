@@ -13,50 +13,88 @@ def evaluate_metrics():
     
     print("====== 仿真结果评价指标 ======")
     
-    # 1. 平均等待接单时间 AWT (Average Wait Time)
-    # 定义：由于 schema 中 trip_requests 记录了 dispatch_time（即请求生成时间），
-    # 我们需要关联两张表来计算 AWT
-    df_awt = pd.read_sql_query("""
+    # 1. 乘客等待接单时间 AWT (Average Wait Time)
+    df_awt_all = pd.read_sql_query("""
         SELECT AVG(a.assign_time - r.dispatch_time) as awt 
         FROM assignments a 
         JOIN trip_requests r ON a.request_id = r.request_id 
         WHERE a.assign_time IS NOT NULL
     """, conn)
-    awt = df_awt['awt'].iloc[0]
-    print(f"1. 平均乘客等待接单时间 (AWT): {awt:.2f} 秒" if pd.notnull(awt) else "1. 平均等待接单时间 (AWT): N/A")
+    awt_all = df_awt_all['awt'].iloc[0]
+
+    df_awt_health = pd.read_sql_query("""
+        SELECT AVG(a.assign_time - r.dispatch_time) as awt 
+        FROM assignments a 
+        JOIN trip_requests r ON a.request_id = r.request_id 
+        WHERE r.status = 'COMPLETED'
+    """, conn)
+    awt_health = df_awt_health['awt'].iloc[0]
+
+    print("1. 乘客等待接单时间 (AWT):")
+    print(f"   - 所有已接订单平均: {awt_all:.2f} 秒" if pd.notnull(awt_all) else "   - 所有已接订单平均: N/A")
+    print(f"   - 最终成功完成的健康订单平均: {awt_health:.2f} 秒" if pd.notnull(awt_health) else "   - 最终成功完成的健康订单平均: N/A")
     
-    # 2. 平均接驾时间
-    df_pickup = pd.read_sql_query("SELECT AVG(pickup_time - assign_time) as pickup_time FROM assignments WHERE pickup_time IS NOT NULL", conn)
+    # 2. 车辆行驶时间深度分析
+    df_pickup = pd.read_sql_query("""
+        SELECT AVG(a.pickup_time - a.assign_time) as pickup_time 
+        FROM assignments a
+        JOIN trip_requests r ON a.request_id = r.request_id 
+        WHERE r.status = 'COMPLETED' AND a.pickup_time IS NOT NULL
+    """, conn)
     pickup_time = df_pickup['pickup_time'].iloc[0]
-    print(f"2. 平均接驾时间 (Pickup Time): {pickup_time:.2f} 秒" if pd.notnull(pickup_time) else "2. 平均接驾时间: N/A")
+
+    df_trip = pd.read_sql_query("""
+        SELECT AVG(a.dropoff_time - a.pickup_time) as trip_time 
+        FROM assignments a
+        JOIN trip_requests r ON a.request_id = r.request_id 
+        WHERE r.status = 'COMPLETED' AND a.dropoff_time IS NOT NULL
+    """, conn)
+    trip_time = df_trip['trip_time'].iloc[0]
+
+    print("\n2. 车辆行驶时间深度分析 (仅统计健康完成订单):")
+    print(f"   - 平均空车接驾耗时 (Pickup Time): {pickup_time:.2f} 秒" if pd.notnull(pickup_time) else "   - 平均空车接驾耗时: N/A")
+    print(f"   - 平均载客行程耗时 (Trip Time): {trip_time:.2f} 秒" if pd.notnull(trip_time) else "   - 平均载客行程耗时: N/A")
     
-    # 3. 订单完成率
+    # 3. 订单状态分布
     df_req = pd.read_sql_query("SELECT status, COUNT(*) as cnt FROM trip_requests GROUP BY status", conn)
     total_req = df_req['cnt'].sum()
     completed = df_req[df_req['status'] == 'COMPLETED']['cnt'].sum() if not df_req[df_req['status'] == 'COMPLETED'].empty else 0
-    print(f"\n3. 订单完成率: {(completed/total_req)*100:.2f}% ( {completed}/{total_req} )")
+    cancelled = df_req[df_req['status'] == 'CANCELLED']['cnt'].sum() if not df_req[df_req['status'] == 'CANCELLED'].empty else 0
     
-    # 4. 空闲车辆比例 (IDLE Rate)
+    print(f"\n3. 订单状态分布 (总数 {total_req}):")
+    print(f"   - 成功完成 (COMPLETED): {completed} 单 ({(completed/total_req)*100:.2f}%)")
+    print(f"   - 超时死单 (CANCELLED): {cancelled} 单 ({(cancelled/total_req)*100:.2f}%)")
+    print("     (注: 较高的 CANCELLED 说明车辆卡死在路上，或接单距离仍过长导致超时被系统熔断)")
+    
+    # 4. 最终车辆状态分布
     df_taxis = pd.read_sql_query("SELECT status, COUNT(*) as cnt FROM taxis GROUP BY status", conn)
     total_taxis = df_taxis['cnt'].sum()
     idle_taxis = df_taxis[df_taxis['status'] == 'IDLE']['cnt'].sum() if not df_taxis[df_taxis['status'] == 'IDLE'].empty else 0
-    print(f"4. 最终空闲车辆比例 (IDLE Rate): {(idle_taxis/total_taxis)*100:.2f}% ( {idle_taxis}/{total_taxis} )")
+    rebalancing_taxis = df_taxis[df_taxis['status'] == 'REBALANCING']['cnt'].sum() if not df_taxis[df_taxis['status'] == 'REBALANCING'].empty else 0
+    
+    print(f"\n4. 最终车辆状态分布 (总数 {total_taxis}):")
+    print(f"   - 纯空闲 (IDLE): {idle_taxis} 辆 ({(idle_taxis/total_taxis)*100:.2f}%)")
+    print(f"   - 正在重平衡 (REBALANCING): {rebalancing_taxis} 辆 ({(rebalancing_taxis/total_taxis)*100:.2f}%)")
 
     # 5. 空驶率 (Empty-Mile Ratio) 代理指标
-    # 由于未记录具体里程，用时间代替：(AWT + Pickup Time) / Total Time
-    df_trip = pd.read_sql_query("SELECT AVG(dropoff_time - pickup_time) as trip_time FROM assignments WHERE dropoff_time IS NOT NULL", conn)
-    trip_time = df_trip['trip_time'].iloc[0]
     if pd.notnull(pickup_time) and pd.notnull(trip_time):
         empty_time_ratio = pickup_time / (pickup_time + trip_time)
-        print(f"5. 平均空驶时间占比 (Empty-Time Ratio, 代理指标): {empty_time_ratio*100:.2f}%")
+        print(f"\n5. 平均空驶时间占比 (基于健康订单): {empty_time_ratio*100:.2f}%")
+        if empty_time_ratio > 0.4:
+            print("   [优化建议]: 空驶占比偏高。接驾时间与实际行程时间相近。可能原因：")
+            print("   a. 派单半径虽然限制了，但路网严重拥堵导致实际开过去极其耗时。")
+            print("   b. MCF 重平衡调度把大量车发去了错误的地方，导致它们还在路上跑，局部依然缺车。")
     else:
-        print("5. 平均空驶时间占比: N/A")
+        print("\n5. 平均空驶时间占比: N/A")
 
-    # 6. 区域供需平衡度 (Regional Supply-Demand Balance)
-    print("\n6. 区域供需平衡度分析 (基于调度记录):")
-    df_rebalance = pd.read_sql_query("SELECT status, COUNT(*) as cnt FROM taxis GROUP BY status", conn)
-    print("   目前系统已在主循环中实现了实时的供需差(Demand - Supply)重平衡调度。")
-    print("   (详情可参考重平衡模块的日志输出)")
+    # 6. 重平衡执行情况 (V0.2)
+    print("\n6. 重平衡执行情况 (V0.2 基于 MCF):")
+    try:
+        df_rebalance_logs = pd.read_sql_query("SELECT COUNT(*) as cnt FROM rebalance_logs", conn)
+        rebalance_count = df_rebalance_logs['cnt'].iloc[0]
+        print(f"   总共发起了 {rebalance_count} 次跨区域车辆重平衡调度。")
+    except Exception:
+        print("   暂无重平衡记录或表不存在。")
 
     # 可视化部分（可选）
     print("\n[可视化] 正在生成各状态订单分布图...")

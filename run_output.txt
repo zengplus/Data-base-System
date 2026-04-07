@@ -1,0 +1,32 @@
+Traceback (most recent call last):
+  File "/home/shu/Documents/Data-base-System/main.py", line 94, in main
+    sumo.step()
+  File "/home/shu/Documents/Data-base-System/simulation/sumo_connector.py", line 19, in step
+    traci.simulationStep()
+  File "/home/shu/Documents/Data-base-System/.venv/lib/python3.12/site-packages/traci/main.py", line 200, in simulationStep
+    connection.check().simulationStep(step)
+  File "/home/shu/Documents/Data-base-System/.venv/lib/python3.12/site-packages/traci/connection.py", line 370, in simulationStep
+    result = self._sendCmd(tc.CMD_SIMSTEP, None, None, "D", step)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/shu/Documents/Data-base-System/.venv/lib/python3.12/site-packages/traci/connection.py", line 232, in _sendCmd
+    return self._sendExact()
+           ^^^^^^^^^^^^^^^^^
+  File "/home/shu/Documents/Data-base-System/.venv/lib/python3.12/site-packages/traci/connection.py", line 137, in _sendExact
+    raise FatalTraCIError("Connection closed by SUMO.")
+traci.exceptions.FatalTraCIError: Connection closed by SUMO.
+[SpatialCache] 成功加载 /home/shu/Documents/Data-base-System/data/taxi_zones/taxi_zones.shp，使用基于 Shapefile 的真实区域划分。
+[SpatialCache] 成功加载 centralEdges.json，包含 19 个区域的中心边。
+ Retrying in 1 seconds
+[Rebalance Debug] Step 120: 供需计算结果 -> 缺车区域数量: 3, 富裕区域数量: 0
+[Rebalance Debug] Step 240: 供需计算结果 -> 缺车区域数量: 3, 富裕区域数量: 0
+[Rebalance Debug] Step 360: 供需计算结果 -> 缺车区域数量: 3, 富裕区域数量: 0
+[Rebalance Debug] Step 480: 供需计算结果 -> 缺车区域数量: 3, 富裕区域数量: 0
+[Rebalance Debug] Step 600: 供需计算结果 -> 缺车区域数量: 3, 富裕区域数量: 0
+[Rebalance Debug] Step 720: 供需计算结果 -> 缺车区域数量: 3, 富裕区域数量: 0
+[Rebalance Debug] Step 840: 供需计算结果 -> 缺车区域数量: 3, 富裕区域数量: 0
+[Rebalance Debug] Step 960: 供需计算结果 -> 缺车区域数量: 3, 富裕区域数量: 0
+[Rebalance Debug] Step 1080: 供需计算结果 -> 缺车区域数量: 3, 富裕区域数量: 0
+[Rebalance Debug] Step 1200: 供需计算结果 -> 缺车区域数量: 3, 富裕区域数量: 0
+[Rebalance Debug] Step 1320: 供需计算结果 -> 缺车区域数量: 3, 富裕区域数量: 0
+[Rebalance Debug] Step 1440: 供需计算结果 -> 缺车区域数量: 3, 富裕区域数量: 0
+Average Wait Time: N/A (No trips completed)

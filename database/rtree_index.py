@@ -16,15 +16,14 @@ class RTreeIndex:
             (rtree_id, x, x, y, y)
         )
 
-    def knn(self, target_x, target_y, current_step, k=1):
+    def knn(self, target_x, target_y, current_step, k=15):
         """
         基于 R‑Tree 的 K 近邻查询（返回最近的 k 辆空闲出租车）。
-        注意：SQLite R‑Tree 本身不直接支持 KNN，这里采用先获取所有空闲车辆，
-        再用 R‑Tree 快速获取候选集的方式。实际可用空间查询扩展或计算欧氏距离。
-        为满足题目要求，我们确保 R‑Tree 被用于缩小候选范围。
+        V0.2 优化：返回更多的候选集给 dispatch_assigner，
+        由其通过 Time-KNN (基于真实路网行驶时间) 进行二次筛选。
         """
         # 获取所有空闲车辆的坐标（已存在 taxis 表中）
         idle_taxis = self.db.get_idle_taxis(current_step)
-        # 计算欧氏距离排序
+        # 基础的空间距离排序（缩小搜索范围，降低路网时间计算量）
         idle_taxis.sort(key=lambda t: (t[1]-target_x)**2 + (t[2]-target_y)**2)
         return idle_taxis[:k]

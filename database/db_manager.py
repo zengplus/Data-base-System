@@ -9,7 +9,7 @@ class DBManager:
 
     def init_tables(self):
         """根据 SQL_FILE 创建表（需先定义好所有表结构）"""
-        with open(config.SQL_FILE, "r", encoding="utf-8") as f:
+        with open(config.SQL_FILE, 'r') as f:
             self.cursor.executescript(f.read())
         self.conn.commit()
 
@@ -26,21 +26,27 @@ class DBManager:
         self.conn.close()
 
     # 其他常用方法：插入/更新/查询，可进一步封装
-    def update_taxi_location(self, taxi_id, x, y, step):
+    def update_taxi_location(self, taxi_id, x, y, step, cell_id=None):
         """更新 taxi 表位置并返回 R‑Tree 更新所需的数据"""
-        self.cursor.execute("""
-            UPDATE taxis SET current_x=?, current_y=?, last_update=?
-            WHERE taxi_id=?
-        """, (x, y, step, taxi_id))
+        if cell_id:
+            self.cursor.execute("""
+                UPDATE taxis SET current_x=?, current_y=?, last_update=?, cell_id=?
+                WHERE taxi_id=?
+            """, (x, y, step, cell_id, taxi_id))
+        else:
+            self.cursor.execute("""
+                UPDATE taxis SET current_x=?, current_y=?, last_update=?
+                WHERE taxi_id=?
+            """, (x, y, step, taxi_id))
 
     def update_taxi_status(self, taxi_id, new_status):
         self.cursor.execute("UPDATE taxis SET status=? WHERE taxi_id=?", (new_status, taxi_id))
 
     def get_idle_taxis(self, current_step):
-        """返回空闲出租车列表 (taxi_id, x, y)
+        """返回空闲出租车列表 (taxi_id, x, y, cell_id)
         注意：允许获取最近几个 step 更新过的车辆，避免因为某个 step 没有位置更新导致车辆不可用
         """
-        self.cursor.execute("SELECT taxi_id, current_x, current_y FROM taxis WHERE status='IDLE' AND last_update >= ?", (current_step - 2,))
+        self.cursor.execute("SELECT taxi_id, current_x, current_y, cell_id FROM taxis WHERE status='IDLE' AND last_update >= ?", (current_step - 2,))
         return self.cursor.fetchall()
 
     def assign_vehicle(self, taxi_id, request_id, assign_time):
