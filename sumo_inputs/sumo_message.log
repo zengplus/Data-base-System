@@ -1,23 +1,148 @@
-***Starting server on port 40273 ***
-Loading net-file from '/home/shu/Documents/Data-base-System/sumo_inputs/convert-1.net.xml' ... done (449ms).
+***Starting server on port 32935 ***
+Loading net-file from '/home/shu/Documents/Data-base-System/sumo_inputs/convert-1.net.xml' ... done (392ms).
+Loading additional-files from '/home/shu/Documents/Data-base-System/sumo_inputs/osm_visual.poly.xml' ... done (725ms).
 Loading done.
 Simulation started with time: 0.00.
-Simulation ended at time: 3600.00
+Simulation ended at time: 600.00
 Reason: TraCI requested termination.
 Performance: 
- Duration: 2105.46s
- TraCI-Duration: 1897.15s
- Real time factor: 1.70984
- UPS: 3454.383969
- UPS-Persons: 130.247381
+ Duration: 210.12s
+ TraCI-Duration: 98.37s
+ Real time factor: 2.85552
+ UPS: 1179.817151
+ UPS-Persons: 116.543483
 Vehicles: 
- Inserted: 3843 (Loaded: 3849)
- Running: 2294
- Waiting: 5
- Teleports: 55507 (Jam: 371, Yield: 11743, Wrong Lane: 43393)
- Emergency Stops: 14
- Emergency Braking: 19
+ Inserted: 525
+ Running: 503
+ Waiting: 0
+ Teleports: 1411 (Jam: 10, Yield: 1396, Wrong Lane: 5)
+ Emergency Stops: 2
+ Emergency Braking: 2
 Persons: 
- Inserted: 1500
- Running: 61
+ Inserted: 200
+ Running: 33
 
+AStarRouter answered 12 queries and explored 1489.00 edges on average.
+AStarRouter spent 0.01s answering queries (0.92ms on average).
+AStarRouter answered 16 queries and explored 1246.12 edges on average.
+AStarRouter spent 0.01s answering queries (0.81ms on average).
+AStarRouter answered 6 queries and explored 815.00 edges on average.
+AStarRouter spent 0.00s answering queries (0.33ms on average).
+AStarRouter answered 6 queries and explored 755.33 edges on average.
+AStarRouter spent 0.00s answering queries (0.50ms on average).
+AStarRouter answered 12 queries and explored 1505.67 edges on average.
+AStarRouter spent 0.01s answering queries (0.83ms on average).
+AStarRouter answered 8 queries and explored 1417.50 edges on average.
+AStarRouter spent 0.01s answering queries (0.75ms on average).
+AStarRouter answered 16 queries and explored 1330.00 edges on average.
+AStarRouter spent 0.01s answering queries (0.81ms on average).
+AStarRouter answered 6 queries and explored 1853.67 edges on average.
+AStarRouter spent 0.01s answering queries (1.00ms on average).
+AStarRouter answered 6 queries and explored 1160.00 edges on average.
+AStarRouter spent 0.00s answering queries (0.67ms on average).
+AStarRouter answered 4 queries and explored 856.00 edges on average.
+AStarRouter spent 0.00s answering queries (0.25ms on average).
+AStarRouter answered 12 queries and explored 1437.67 edges on average.
+AStarRouter spent 0.01s answering queries (0.83ms on average).
+AStarRouter answered 2 queries and explored 1234.00 edges on average.
+AStarRouter spent 0.00s answering queries (0.50ms on average).
+AStarRouter answered 10 queries and explored 1020.80 edges on average.
+AStarRouter spent 0.01s answering queries (0.50ms on average).
+AStarRouter answered 2 queries and explored 1669.00 edges on average.
+AStarRouter spent 0.00s answering queries (0.50ms on average).
+AStarRouter answered 10 queries and explored 1705.00 edges on average.
+AStarRouter spent 0.01s answering queries (0.90ms on average).
+AStarRouter answered 8 queries and explored 973.00 edges on average.
+AStarRouter spent 0.00s answering queries (0.50ms on average).
+AStarRouter answered 14 queries and explored 1203.29 edges on average.
+AStarRouter spent 0.01s answering queries (0.93ms on average).
+AStarRouter answered 12 queries and explored 855.67 edges on average.
+AStarRouter spent 0.01s answering queries (0.58ms on average).
+AStarRouter answered 4 queries and explored 760.00 edges on average.
+AStarRouter spent 0.00s answering queries (0.25ms on average).
+AStarRouter answered 16 queries and explored 1448.12 edges on average.
+AStarRouter spent 0.02s answering queries (0.94ms on average).
+AStarRouter answered 8 queries and explored 1863.75 edges on average.
+AStarRouter spent 0.01s answering queries (1.25ms on average).
+AStarRouter answered 8 queries and explored 382.50 edges on average.
+AStarRouter spent 0.00s answering queries (0.12ms on average).
+AStarRouter answered 6 queries and explored 2605.00 edges on average.
+AStarRouter spent 0.01s answering queries (1.50ms on average).
+AStarRouter answered 8 queries and explored 1650.50 edges on average.
+AStarRouter spent 0.01s answering queries (0.75ms on average).
+AStarRouter answered 4 queries and explored 1435.00 edges on average.
+AStarRouter spent 0.00s answering queries (0.75ms on average).
+AStarRouter answered 10 queries and explored 1572.00 edges on average.
+AStarRouter spent 0.01s answering queries (0.90ms on average).
+AStarRouter answered 8 queries and explored 1389.25 edges on average.
+AStarRouter spent 0.01s answering queries (0.88ms on average).
+AStarRouter answered 12 queries and explored 1009.17 edges on average.
+AStarRouter spent 0.01s answering queries (0.58ms on average).
+AStarRouter answered 6 queries and explored 835.00 edges on average.
+AStarRouter spent 0.00s answering queries (0.33ms on average).
+AStarRouter answered 4 queries and explored 2032.00 edges on average.
+AStarRouter spent 0.01s answering queries (1.25ms on average).
+AStarRouter answered 12 queries and explored 1265.67 edges on average.
+AStarRouter spent 0.01s answering queries (0.83ms on average).
+AStarRouter answered 6 queries and explored 911.00 edges on average.
+AStarRouter spent 0.00s answering queries (0.67ms on average).
+AStarRouter answered 12 queries and explored 1145.17 edges on average.
+AStarRouter spent 0.01s answering queries (0.75ms on average).
+AStarRouter answered 4 queries and explored 536.00 edges on average.
+AStarRouter spent 0.00s answering queries (0.25ms on average).
+AStarRouter answered 12 queries and explored 1090.67 edges on average.
+AStarRouter spent 0.01s answering queries (0.75ms on average).
+AStarRouter answered 32 queries and explored 1568.66 edges on average.
+AStarRouter spent 0.03s answering queries (0.97ms on average).
+AStarRouter answered 22 queries and explored 1418.18 edges on average.
+AStarRouter spent 0.02s answering queries (0.91ms on average).
+AStarRouter answered 30 queries and explored 1069.03 edges on average.
+AStarRouter spent 0.02s answering queries (0.63ms on average).
+AStarRouter answered 14 queries and explored 1508.14 edges on average.
+AStarRouter spent 0.01s answering queries (0.86ms on average).
+AStarRouter answered 12 queries and explored 1566.00 edges on average.
+AStarRouter spent 0.01s answering queries (0.83ms on average).
+AStarRouter answered 12 queries and explored 828.17 edges on average.
+AStarRouter spent 0.00s answering queries (0.33ms on average).
+AStarRouter answered 10 queries and explored 1198.00 edges on average.
+AStarRouter spent 0.01s answering queries (0.80ms on average).
+AStarRouter answered 6 queries and explored 574.33 edges on average.
+AStarRouter spent 0.00s answering queries (0.33ms on average).
+AStarRouter answered 14 queries and explored 1470.86 edges on average.
+AStarRouter spent 0.01s answering queries (0.79ms on average).
+AStarRouter answered 2 queries and explored 1046.50 edges on average.
+AStarRouter spent 0.00s answering queries (0.50ms on average).
+AStarRouter answered 16 queries and explored 916.62 edges on average.
+AStarRouter spent 0.01s answering queries (0.62ms on average).
+AStarRouter answered 2 queries and explored 1522.00 edges on average.
+AStarRouter spent 0.00s answering queries (1.00ms on average).
+AStarRouter answered 6 queries and explored 787.67 edges on average.
+AStarRouter spent 0.00s answering queries (0.67ms on average).
+AStarRouter answered 12 queries and explored 1491.17 edges on average.
+AStarRouter spent 0.01s answering queries (0.67ms on average).
+AStarRouter answered 8 queries and explored 1318.75 edges on average.
+AStarRouter spent 0.01s answering queries (1.00ms on average).
+AStarRouter answered 8 queries and explored 962.75 edges on average.
+AStarRouter spent 0.00s answering queries (0.50ms on average).
+AStarRouter answered 10 queries and explored 1049.20 edges on average.
+AStarRouter spent 0.01s answering queries (0.70ms on average).
+AStarRouter answered 12 queries and explored 1531.50 edges on average.
+AStarRouter spent 0.01s answering queries (0.92ms on average).
+AStarRouter answered 6 queries and explored 935.33 edges on average.
+AStarRouter spent 0.00s answering queries (0.33ms on average).
+AStarRouter answered 6 queries and explored 1330.67 edges on average.
+AStarRouter spent 0.00s answering queries (0.67ms on average).
+AStarRouter answered 12 queries and explored 573.17 edges on average.
+AStarRouter spent 0.00s answering queries (0.25ms on average).
+AStarRouter answered 6 queries and explored 1035.67 edges on average.
+AStarRouter spent 0.00s answering queries (0.67ms on average).
+AStarRouter answered 6 queries and explored 1428.67 edges on average.
+AStarRouter spent 0.01s answering queries (0.83ms on average).
+AStarRouter answered 4 queries and explored 531.50 edges on average.
+AStarRouter spent 0.00s answering queries (0.25ms on average).
+AStarRouter answered 10 queries and explored 1090.60 edges on average.
+AStarRouter spent 0.01s answering queries (0.70ms on average).
+AStarRouter answered 12 queries and explored 1154.67 edges on average.
+AStarRouter spent 0.01s answering queries (0.67ms on average).
+AStarRouter answered 18 queries and explored 1497.67 edges on average.
+AStarRouter spent 0.02s answering queries (1.00ms on average).

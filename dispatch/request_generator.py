@@ -48,6 +48,10 @@ class RequestGenerator:
         radius_sq = ((max_x - min_x) * 0.25) ** 2
 
         rows = []
+        
+        # 强制设置随机种子，确保乘客请求的时空分布每次运行均完全一致
+        random.seed(config.PYTHON_RANDOM_SEED)
+        
         for i in range(config.REQUEST_COUNT):
             time_fraction = math.pow(random.random(), 1.5) 
             dispatch_time = int(time_fraction * (config.SIM_END - 1))

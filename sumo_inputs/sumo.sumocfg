@@ -3,6 +3,7 @@
   <input>
     <net-file value="convert-1.net.xml"/>
     <route-files value="routes.rou.xml"/>
+    <additional-files value="osm_visual.poly.xml"/>
     <gui-settings-file value="gui-settings.xml"/>
   </input>
   <time>

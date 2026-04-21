@@ -10,6 +10,7 @@ from vehicle.atomic_updater import AtomicUpdater
 from vehicle.vehicle_visual import VehicleVisual
 from dispatch.request_handler import generate_person_in_sumo
 import config
+import random
 
 class Scheduler:
     """重构后的核心调度器 (V0.2)"""
@@ -27,6 +28,39 @@ class Scheduler:
         
         self.active_assignments = {}   # taxi_id -> request_id
         self.visible_persons = set()
+        self.mode = config.EXPERIMENT_MODE
+
+    def _select_best_taxi(self, current_step, ox, oy, origin_edge):
+        """
+        根据实验模式返回 (taxi_id, route_to_origin)
+        - baseline: 随机空车
+        - knn/proposed: KNN + 时间成本最优
+        """
+        if self.mode == "baseline":
+            idle_taxis = self.db.get_idle_taxis(current_step)
+            # 在 baseline 中，如果找不到空车，就让他等待，但我们也可以给随机策略一点小惩罚
+            if not idle_taxis:
+                return None, None
+            
+            # 使用固定的随机种子，保证 baseline 抽取一致
+            r = random.Random(config.PYTHON_RANDOM_SEED + current_step)
+            r.shuffle(idle_taxis)
+            for taxi_id, *_ in idle_taxis:
+                try:
+                    if self.sumo.is_on_internal_edge(taxi_id):
+                        continue
+                    current_edge = self.sumo.get_vehicle_edge(taxi_id)
+                    route = self.route_planner.get_shortest_path(current_edge, origin_edge)
+                    if route and len(route) >= 1:
+                        return taxi_id, route
+                except Exception:
+                    continue
+            return None, None
+
+        idle_taxis = self.knn_finder.find_nearest_idle_taxis(ox, oy, current_step, k=15)
+        if not idle_taxis:
+            return None, None
+        return self.dispatch_assigner.find_best_taxi(idle_taxis, ox, oy, origin_edge)
 
     def process_pending_requests(self, current_step):
         """处理当前时间步所有待处理的请求，并清理超时死单"""
@@ -43,14 +77,7 @@ class Scheduler:
                 generate_person_in_sumo(traci, req_id, origin_edge, dest_edge, current_step)
                 self.visible_persons.add(req_id)
                 
-            # KNN 查找候选空闲车辆
-            idle_taxis = self.knn_finder.find_nearest_idle_taxis(ox, oy, current_step, k=15)
-            if not idle_taxis:
-                continue
-
-            # 寻找最优车辆 (基于真实时间)
-            best_taxi_id, best_route = self.dispatch_assigner.find_best_taxi(idle_taxis, ox, oy, origin_edge)
-            
+            best_taxi_id, best_route = self._select_best_taxi(current_step, ox, oy, origin_edge)
             if not best_taxi_id:
                 continue
 

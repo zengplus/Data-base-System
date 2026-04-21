@@ -127,4 +127,3 @@
 4. Availability Management（状态原子更新）
 5. Rebalancing（区域供需重平衡）
 
-

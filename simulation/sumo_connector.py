@@ -12,8 +12,13 @@ class SUMOConnector:
             sumo_binary = checkBinary("sumo-gui")
         else:
             sumo_binary = checkBinary("sumo")
-            
-        traci.start([sumo_binary, "-c", self.cfg_file, "--start", "--delay", config.DELAY, "--no-step-log"])
+
+        cmd = [sumo_binary, "-c", self.cfg_file, "--start", "--delay", config.DELAY, "--no-step-log"]
+        if getattr(config, "SUMO_SEED", None) is not None:
+            cmd += ["--seed", str(config.SUMO_SEED)]
+        else:
+            cmd += ["--seed", "42"]
+        traci.start(cmd)
 
     def step(self):
         traci.simulationStep()
@@ -30,7 +35,15 @@ class SUMOConnector:
                 result.append((vid, x, y))
         return result
 
+    def vehicle_exists(self, vid):
+        try:
+            return vid in traci.vehicle.getIDList()
+        except Exception:
+            return False
+
     def get_vehicle_edge(self, vid):
+        if not self.vehicle_exists(vid):
+            return None
         road_id = traci.vehicle.getRoadID(vid)
         if road_id.startswith(":"):
             route = traci.vehicle.getRoute(vid)
@@ -40,9 +53,14 @@ class SUMOConnector:
         return road_id
 
     def is_on_internal_edge(self, vid):
+        if not self.vehicle_exists(vid):
+            return False
         return traci.vehicle.getRoadID(vid).startswith(":")
 
     def set_route(self, vid, edge_ids):
+        if not self.vehicle_exists(vid) or not edge_ids or len(edge_ids) < 2:
+            return False
         traci.vehicle.setRoute(vid, edge_ids)
+        return True
 
     # ... 其他需要的方法（如获取车辆速度、里程等）

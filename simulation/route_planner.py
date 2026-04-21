@@ -3,8 +3,8 @@ import config
 import heapq
 
 class RoutePlanner:
-    def __init__(self, net_file=config.NET_FILE):
-        self.net = sumolib.net.readNet(net_file)
+    def __init__(self, net_file=config.NET_FILE, net=None):
+        self.net = net if net else sumolib.net.readNet(net_file)
         
         # 缓存中心点，用于背景车惩罚
         edges = self.net.getEdges()
@@ -51,8 +51,8 @@ class RoutePlanner:
         # 记录已访问节点及其最小代价
         g_scores = {start_edge.getID(): 0}
         
-        # 防止搜索过深导致卡死，设置最大探索步数
-        max_steps = 2000
+        # 防止搜索过深导致卡死，由于新地图很大，适当缩小最大步数
+        max_steps = 1000
         steps = 0
         
         while open_set and steps < max_steps:
@@ -65,37 +65,37 @@ class RoutePlanner:
             current_edge = self.net.getEdge(current_edge_id)
             
             # 获取所有合法的下游边 (outgoing edges)
-            for out_edge in current_edge.getOutgoing():
-                next_edge = out_edge.getToNode().getOutgoing()
-                for next_e in next_edge:
-                    next_id = next_e.getID()
+            for next_e in current_edge.getOutgoing():
+                if not next_e.allows("passenger"):
+                    continue
+                next_id = next_e.getID()
+                
+                # 计算这段路的基础长度代价
+                base_cost = next_e.getLength()
+                
+                # --- 核心惩罚逻辑 ---
+                lane_num = next_e.getLaneNumber()
+                n_x, n_y = next_e.getBoundingBox()[:2]
+                dist_sq = (n_x - self.center_x)**2 + (n_y - self.center_y)**2
+                is_center = dist_sq <= self.radius_sq
+                
+                # 1. 闯入市中心惩罚
+                if is_center:
+                    base_cost *= 50
+                # 2. 车道数惩罚
+                if lane_num == 1:
+                    base_cost *= 20
+                elif lane_num == 2:
+                    base_cost *= 5
+                elif lane_num == 3:
+                    base_cost *= 2
                     
-                    # 计算这段路的基础长度代价
-                    base_cost = next_e.getLength()
-                    
-                    # --- 核心惩罚逻辑 ---
-                    lane_num = next_e.getLaneNumber()
-                    n_x, n_y = next_e.getBoundingBox()[:2]
-                    dist_sq = (n_x - self.center_x)**2 + (n_y - self.center_y)**2
-                    is_center = dist_sq <= self.radius_sq
-                    
-                    # 1. 闯入市中心惩罚
-                    if is_center:
-                        base_cost *= 50
-                    # 2. 车道数惩罚
-                    if lane_num == 1:
-                        base_cost *= 20
-                    elif lane_num == 2:
-                        base_cost *= 5
-                    elif lane_num == 3:
-                        base_cost *= 2
-                        
-                    tentative_g = current_g + base_cost
-                    
-                    if next_id not in g_scores or tentative_g < g_scores[next_id]:
-                        g_scores[next_id] = tentative_g
-                        f_score = tentative_g + heuristic(next_e)
-                        heapq.heappush(open_set, (f_score, tentative_g, next_id, path + [next_id]))
+                tentative_g = current_g + base_cost
+                
+                if next_id not in g_scores or tentative_g < g_scores[next_id]:
+                    g_scores[next_id] = tentative_g
+                    f_score = tentative_g + heuristic(next_e)
+                    heapq.heappush(open_set, (f_score, tentative_g, next_id, path + [next_id]))
                         
         # 如果搜索失败或超时，返回单边（退化处理）
         return [start_edge.getID()]

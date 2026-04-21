@@ -55,12 +55,12 @@ class RebalanceExecutor:
         idle_taxis_list = self.db.get_idle_taxis(current_step)
         
         # 降低重平衡的激进程度：
-        # 1. 最多只允许调用当前空闲车辆的 10% (原为 20%)，保留更多空车给即时订单
-        # 2. 如果全图空车少于 10 辆，则暂停重平衡，保证基本运力
-        if len(idle_taxis_list) < 10:
+        # 1. 最多允许调用当前空闲车辆的 20%
+        # 2. 如果全图空车少于 5 辆，则暂停重平衡，保证基本运力
+        if len(idle_taxis_list) < 5:
             return
             
-        max_rebalance_count = max(1, int(len(idle_taxis_list) * 0.1))
+        max_rebalance_count = max(1, int(len(idle_taxis_list) * 0.2))
         
         # 即使只有1辆空车，也允许最多调度1辆（如果不足5辆的话，20%是0，用max(1, ...)保底）
         
