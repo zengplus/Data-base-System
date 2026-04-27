@@ -1,3 +1,6 @@
+"""
+再平衡模块(rebalancer.py)
+"""
 import json
 import os
 import geopandas as gpd
@@ -8,7 +11,7 @@ from simulation.route_planner import RoutePlanner
 import config
 
 class RegionProjector:
-    """参考 taxi-sim 仓库的区域划分逻辑，使用 shapefile 将坐标映射到不规则多边形区域"""
+    """使用 shapefile 将坐标映射到不规则多边形区域"""
     def __init__(self):
         shp_path = os.path.join(config.BASE_DIR, 'data', 'taxi_zones', 'taxi_zones.shp')
         if os.path.exists(shp_path):
