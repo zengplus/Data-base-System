@@ -51,6 +51,11 @@
 
 ### 安装依赖
 
+#### 方案A：uv安装
+```bash
+uv pip install -r uv.lock
+```
+#### 方案B：pip 安装
 ```bash
 pip install -r requirements.txt
 ```
